@@ -1,6 +1,8 @@
 import streamlit as st
 import uuid
 from rag_chat_bot import chat
+from embedding import load_pdf
+import io
 # Function to process user input and generate bot responses based on the selected document
 # def chat(user_id, document, question):
 #     # Replace this logic with your actual implementation for bot response
@@ -12,6 +14,21 @@ from rag_chat_bot import chat
 # Streamlit app
 def main():
     st.title("Chatbot with Conversation History")
+
+    # File uploader
+    uploaded_file = st.file_uploader("Upload a PDF file", type="pdf")
+    
+    if uploaded_file is not None:
+        byte_data = uploaded_file.read()
+        # Convert byte data to a file-like object using io.BytesIO
+        pdf_file = io.BytesIO(byte_data)
+    
+        # Extract text from the uploaded PDF
+        status: str =  load_pdf(pdf_file, uploaded_file.name)
+        st.success(f"{status}") 
+
+    # Display the extracted text
+    
     
     # Generate a random user ID if not already set
     if "user_id" not in st.session_state:
