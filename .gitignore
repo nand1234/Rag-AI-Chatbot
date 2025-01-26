@@ -1,0 +1,7 @@
+3be2b37c-6945-40f2-ba0e-2d3d33081608
+venv
+chroma.sqlite3
+langchain
+sample_pdf/invoice.pdf
+__pycache__
+sample_pdf/Employee Handbook_Final_20.12.2022.pdf
