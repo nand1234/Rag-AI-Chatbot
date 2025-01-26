@@ -52,6 +52,7 @@ pip install -r requirements.txt
 ### 4. **Login to Hugging Face**
 
 Make sure you log in to Hugging Face using your API token from the command line.
+Upload PDF for chat
 
 ```bash
 huggingface-cli login
@@ -99,3 +100,6 @@ This will start the application, and you can interact with your documents throug
 
 - If you encounter any issues with Redis, check that the server is running on port 6380 and no other processes are using the port.
 - Make sure your Hugging Face token is valid and you're properly logged in before interacting with the model.
+
+
+![alt text](image.png)
