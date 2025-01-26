@@ -45,7 +45,11 @@ def main():
         st.session_state.is_sending = False  # Track if a request is being processed
 
     # Define the options
-    options = ("Invoice", "Employee Handbook_Final_20.12.2022", "Nandkumar_Ghatage_Latest_CV")
+    options = ("Employee Handbook_Final_20.12.2022", "Nandkumar_Ghatage_Latest_CV")
+    # Check if the item exists, if not, add it
+    if  uploaded_file:  # Checks if uploaded_file is not None or empty
+        if uploaded_file.name not in options:  # Checks if name is not in options
+            options = tuple(list(options) + [uploaded_file.name])
     
     # Initialize selected_option with a valid default value
     if "selected_option" not in st.session_state:
@@ -96,6 +100,8 @@ def main():
                 bot_response = chat(st.session_state.user_id, "Employee Handbook_Final_20.12.22.pdf", user_input)
             elif selected_option == "Nandkumar_Ghatage_Latest_CV":
                 bot_response = chat(st.session_state.user_id, "Nandkumar_Ghatage_Latest_CV.pdf", user_input)
+            elif selected_option == f"{uploaded_file.name}":
+                bot_response = chat(st.session_state.user_id, f"{uploaded_file.name}", user_input)
             else:
                 bot_response = "I'm not sure what you're interested in. Please try again."
 
