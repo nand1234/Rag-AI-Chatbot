@@ -1,7 +1,7 @@
 
 # Rag-AI-Chatbot
 
-Rag-based AI chatbot that allows you to interact with your documents using natural language.
+Rag-based AI chatbot with memory allows you to interact with your documents using natural language.
 
 ## Setup Instructions
 
