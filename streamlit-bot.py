@@ -45,7 +45,7 @@ def main():
         st.session_state.is_sending = False  # Track if a request is being processed
 
     # Define the options
-    options = ("Employee Handbook_Final_20.12.2022", "Nandkumar_Ghatage_Latest_CV")
+    options = ("options","")
     # Check if the item exists, if not, add it
     if  uploaded_file:  # Checks if uploaded_file is not None or empty
         if uploaded_file.name not in options:  # Checks if name is not in options
@@ -65,7 +65,7 @@ def main():
         index=options.index(st.session_state.selected_option),  # Default selection
         key="select_option"  # Track changes to the select box
     )
-
+    
     # Display chat history
     st.subheader("Chat History")
     for message in st.session_state.chat_history:
