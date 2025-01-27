@@ -9,7 +9,7 @@ from duckduckgo_search import DDGS
 from langchain.memory import ConversationBufferMemory
 from langchain import hub
 from embedding import get_context
-
+from langchain.schema import HumanMessage
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -82,30 +82,53 @@ def initialize_chatbot(user_id):
 # Function to chat with the bot
 def chat(user_id, metadata, user_input):
     # Initialize chatbot for the user
-    # Modify the prompt to include the context
-    print(user_input)
-    context = get_context(user_input, metadata)  # Get the relevant document text
-    print(context)
-
-    prompt = f"""
-    Context:
-    {context}
-
-    User Input:
-    {user_input}
-
-    Based on the context above, respond to the user input.
-    """
     agent = initialize_chatbot(user_id)
+
+    # Get the relevant document text
+    response = get_context(user_input, metadata)
+    content = response.page_content
+    meta_data = response.metadata
+
+    # Create the HumanMessage object
+    message = HumanMessage(
+        content=content,
+        metadata=meta_data
+    )
+
+    # Define a prompt template with context
+    prompt_template = PromptTemplate(
+        input_variables=["user_input", "chat_history", "message"],
+        template="""
+        You are a helpful and friendly assistant. If context is not available, politely steer the conversation back to previous chat history.
+        You have access to a search tool to provide accurate and up-to-date information.
+
+        **Context:**
+        {message}
+
+        **Conversation History:**
+        {chat_history}
+
+        **User Input:**
+        {user_input}
+
+        **Assistant:"""
+    )
+
+    # Format the prompt with the appropriate variables
+    formatted_prompt = prompt_template.format(
+        user_input=user_input,
+        chat_history=agent.memory.buffer,
+        message=message.content
+    )
 
     try:
         # Get the bot's response
-        response= agent.invoke({"input": prompt})
-        return response['output']
-        # Print the response
+        response = agent.invoke({"input": formatted_prompt})
         print(f"Bot: {response['output']}")
+        return response['output']
     except Exception as e:
         print(f"An error occurred: {e}")
+        return "Sorry, I encountered an error while processing your request."
 
 # Main loop for chatting
 if __name__ == "__main__":
