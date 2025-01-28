@@ -20,13 +20,16 @@ if "uploaded_file_name" not in st.session_state:
 
 # Function to simulate typing effect
 def typing_effect_in_chat(bot_response: str, delay: float = 0.05):
-    """Simulate typing effect while updating chat history."""
+    """Simulate typing effect while displaying the bot response."""
+    placeholder = st.empty()  # Temporary placeholder for the typing effect
     bot_message = ""
     for char in bot_response:
         bot_message += char
-        st.session_state.chat_history.append({"role": "bot", "message": bot_message})
+        placeholder.markdown(f"**Bot:** {bot_message}")
         time.sleep(delay)
-        st.rerun()
+    # Once typing is complete, add the full message to chat history
+    st.session_state.chat_history.append({"role": "bot", "message": bot_response})
+    placeholder.empty()  # Clear the placeholder after completion
 
 # Streamlit app
 def main():
@@ -49,7 +52,7 @@ def main():
                 st.error(f"Failed to process the file: {e}")
 
     # Dropdown options
-    predefined_options = ["options"]
+    predefined_options = ["Invoice", "Employee Handbook_Final_20.12.2022", "Nandkumar_Ghatage_Latest_CV"]
     dropdown_options = predefined_options + ([uploaded_file.name] if uploaded_file else [])
 
     # Dropdown for selecting an option
