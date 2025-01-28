@@ -3,69 +3,58 @@ import uuid
 from rag_chat_bot import chat
 from embedding import load_pdf
 import io
-# Function to process user input and generate bot responses based on the selected document
-# def chat(user_id, document, question):
-#     # Replace this logic with your actual implementation for bot response
-#     if question and document:
-#         return f"Response to your question about '{document}': {question}"
-#     else:
-#         return "Unable to process your request. Please try again."
+import time
+
+# Initialize session state for chat history and file upload
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
+
+if "user_id" not in st.session_state:
+    st.session_state.user_id = str(uuid.uuid4())  # Generate a unique user ID
+
+if "is_sending" not in st.session_state:
+    st.session_state.is_sending = False
+
+if "uploaded_file_name" not in st.session_state:
+    st.session_state.uploaded_file_name = None
+
+# Function to simulate typing effect
+def typing_effect_in_chat(bot_response: str, delay: float = 0.05):
+    """Simulate typing effect while updating chat history."""
+    bot_message = ""
+    for char in bot_response:
+        bot_message += char
+        st.session_state.chat_history.append({"role": "bot", "message": bot_message})
+        time.sleep(delay)
+        st.rerun()
 
 # Streamlit app
 def main():
     st.title("Chatbot with Conversation History")
-
-    # File uploader
+    
+    # File upload logic
     uploaded_file = st.file_uploader("Upload a PDF file", type="pdf")
-    
     if uploaded_file is not None:
-        byte_data = uploaded_file.read()
-        # Convert byte data to a file-like object using io.BytesIO
-        pdf_file = io.BytesIO(byte_data)
-    
-        # Extract text from the uploaded PDF
-        status: str =  load_pdf(pdf_file, uploaded_file.name)
-        st.success(f"{status}") 
+        # Only load the file if it's not already processed
+        if st.session_state.uploaded_file_name != uploaded_file.name:
+            byte_data = uploaded_file.read()
+            pdf_file = io.BytesIO(byte_data)
+            
+            # Process the uploaded file
+            try:
+                status = load_pdf(pdf_file, uploaded_file.name)
+                st.session_state.uploaded_file_name = uploaded_file.name
+                st.success(f"File '{uploaded_file.name}' processed successfully!")
+            except Exception as e:
+                st.error(f"Failed to process the file: {e}")
 
-    # Display the extracted text
-    
-    
-    # Generate a random user ID if not already set
-    if "user_id" not in st.session_state:
-        st.session_state.user_id = str(uuid.uuid4())
-
-    # Display the user ID
-    st.write(f"Your User ID: `{st.session_state.user_id}`")
-
-    # Initialize session state for chat history and button state
-    if "chat_history" not in st.session_state:
-        st.session_state.chat_history = []
-    
-    if "is_sending" not in st.session_state:
-        st.session_state.is_sending = False  # Track if a request is being processed
-
-    # Define the options
-    options = ("options","")
-    # Check if the item exists, if not, add it
-    if  uploaded_file:  # Checks if uploaded_file is not None or empty
-        if uploaded_file.name not in options:  # Checks if name is not in options
-            options = tuple(list(options) + [uploaded_file.name])
-    
-    # Initialize selected_option with a valid default value
-    if "selected_option" not in st.session_state:
-        st.session_state.selected_option = options[0]  # Default to the first option
-
-    # Step 1: Select an option and enter a question
-    st.subheader("Select an option and ask a question")
+    # Dropdown options
+    predefined_options = ["options"]
+    dropdown_options = predefined_options + ([uploaded_file.name] if uploaded_file else [])
 
     # Dropdown for selecting an option
-    selected_option = st.selectbox(
-        "Select an option:",
-        options,
-        index=options.index(st.session_state.selected_option),  # Default selection
-        key="select_option"  # Track changes to the select box
-    )
-    
+    selected_option = st.selectbox("Select an option:", dropdown_options, key="select_option")
+
     # Display chat history
     st.subheader("Chat History")
     for message in st.session_state.chat_history:
@@ -74,48 +63,39 @@ def main():
         else:
             st.markdown(f"**Bot:** {message['message']}")
 
-    # Text input for user question at the bottom
+    # User question input
     user_input = st.text_input("Type your question here...", value="", key="user_input")
 
-    # Submit button (grayed out if a request is being processed)
+    # Submit button
     if st.button("Send", disabled=st.session_state.is_sending):
         if user_input.strip():
-            # Disable the button to prevent multiple clicks
             st.session_state.is_sending = True
 
-            # Append user message and selected option to chat history
+            # Add user message to chat history
             st.session_state.chat_history.append({
                 "role": "user",
                 "message": user_input,
-                "option": selected_option
+                "option": selected_option,
             })
 
-            # Debugging: Log input to check
-            #st.write(f"Debug: User ID: {st.session_state.user_id}, Document: {selected_option}, Question: {user_input}")
-
-            # Generate bot response based on the selected document
-            if selected_option == "Invoice":
-                bot_response = chat(st.session_state.user_id, "invoice.pdf", user_input)
-            elif selected_option == "Employee Handbook_Final_20.12.2022":
-                bot_response = chat(st.session_state.user_id, "Employee Handbook_Final_20.12.22.pdf", user_input)
-            elif selected_option == "Nandkumar_Ghatage_Latest_CV":
-                bot_response = chat(st.session_state.user_id, "Nandkumar_Ghatage_Latest_CV.pdf", user_input)
-            elif selected_option == f"{uploaded_file.name}":
-                bot_response = chat(st.session_state.user_id, f"{uploaded_file.name}", user_input)
+            # Determine the bot response based on the selected option
+            if selected_option in predefined_options:
+                bot_response = chat(st.session_state.user_id, f"{selected_option}.pdf", user_input)
+            elif selected_option == uploaded_file.name:
+                bot_response = chat(st.session_state.user_id, uploaded_file.name, user_input)
             else:
-                bot_response = "I'm not sure what you're interested in. Please try again."
+                bot_response = "I'm not sure what you're referring to. Please try again."
 
-            # Debugging: Log bot response
-            #st.write(f"Debug: Bot Response: {bot_response}")
+            # Add bot response with typing effect
+            typing_effect_in_chat(bot_response)
 
-            # Append bot response to chat history
-            st.session_state.chat_history.append({"role": "bot", "message": bot_response})
-
-            # Re-enable the button after the response is generated
+            # Re-enable the button after processing
             st.session_state.is_sending = False
 
-            # Clear the input field by rerunning the app
+            # Clear user input by rerunning the app
             st.rerun()
+        else:
+            st.warning("Please enter a question before sending.")
 
 # Run the Streamlit app
 if __name__ == "__main__":
